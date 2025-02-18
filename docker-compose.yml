@@ -1,0 +1,34 @@
+services:
+  # Сервис для PostgreSQL
+  database-service:
+    image: postgres:17
+    container_name: fastapi-database
+    ports:
+      - "5432:5432"
+    volumes:
+      - database-service-volume:/var/lib/postgresql/data/
+    env_file:
+      - src/configs/.env
+    healthcheck: #проверка зпуска БД, чтобы приложение не пыталось запуститься до готовности СУБД принимать подключения.
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Сервис для Python-приложения
+  application-service:
+    build:
+      context: .
+    container_name: fastapi-application
+    ports:
+      - "8000:8000"
+    depends_on:
+      database-service:
+        condition: service_healthy  # Ждем, пока PostgreSQL станет healthy
+    volumes:
+      - .:/app
+    env_file:
+      - src/configs/.env
+
+volumes:
+  database-service-volume:
