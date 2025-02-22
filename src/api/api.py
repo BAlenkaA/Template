@@ -1,8 +1,6 @@
 from fastapi import APIRouter
 
+from src.api.endpoints import user_router
 
 main_router = APIRouter()
-
-@main_router.get("/")
-async def hello():
-    return "Hello, World"
+main_router.include_router(user_router, prefix='/users', tags=['Users'])
